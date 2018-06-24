@@ -1,101 +1,64 @@
 package com.esotericcoder.www.todo;
 
-import android.app.Activity;
-import android.arch.persistence.room.ColumnInfo;
-import android.arch.persistence.room.Entity;
-import android.arch.persistence.room.PrimaryKey;
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ListView;
-import org.apache.commons.io.FileUtils;
-import java.io.File;
-import java.io.IOException;
+
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity implements View.OnLongClickListener {
 
-    private ArrayList<String> items;
-    private ArrayAdapter<String> itemsAdapter;
-    private ListView lvItems;
+    private TaskViewModel mTaskViewModel;
+    private TasksAdapter tasksAdapter;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        lvItems = (ListView) findViewById(R.id.lvItems);
-        readItems();
-        itemsAdapter = new ArrayAdapter<String>(this,
-                android.R.layout.simple_list_item_1, items);
-        lvItems.setAdapter(itemsAdapter);
-        // Setup remove listener method call
-        setupListViewListener();
+
+        recyclerView = findViewById(R.id.recyclerview);
+        tasksAdapter = new TasksAdapter(new ArrayList<Task>(), this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(tasksAdapter);
+
+        mTaskViewModel = ViewModelProviders.of(this).get(TaskViewModel.class);
+
+        mTaskViewModel.getAllTasks().observe(MainActivity.this, new Observer<List<Task>>() {
+            @Override
+            public void onChanged(@Nullable List<Task> itemAndPeople) {
+                tasksAdapter.addTasks(itemAndPeople);
+            }
+        });
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Date currentTime = new Date();
+                Task task = new Task("Hello World", 1, currentTime);
+                mTaskViewModel.insert(task);
+            }
+        });
+
     }
 
-    // Adds new item to listview
-    public void onAddItem(View v) {
-        EditText etNewItem = (EditText) findViewById(R.id.etNewItem);
-        String itemText = etNewItem.getText().toString();
-        itemsAdapter.add(itemText);
-        etNewItem.setText("");
-        writeItems();
+    @Override
+    public boolean onLongClick(View view) {
+        Task task = (Task) view.getTag();
+        mTaskViewModel.delete(task);
+        return true;
     }
 
-    @Entity
-    public class Organization {
-
-        @ColumnInfo
-        @PrimaryKey(autoGenerate=true)
-        Long id;
-
-        @ColumnInfo
-        String name;
-    }
-
-    //Private Methods
-
-    // Attaches a long click listener to the listview
-    private void setupListViewListener() {
-        lvItems.setOnItemLongClickListener(
-                new AdapterView.OnItemLongClickListener() {
-                    @Override
-                    public boolean onItemLongClick(AdapterView<?> adapter,
-                                                   View item, int pos, long id) {
-                        // Remove the item within array at position
-                        items.remove(pos);
-                        // Refresh the adapter
-                        itemsAdapter.notifyDataSetChanged();
-                        writeItems();
-                        // Return true consumes the long click event (marks it handled)
-                        return true;
-                    }
-
-                });
-    }
-
-    // Read items of list saved to a txt file locally
-    private void readItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            items = new ArrayList<String>(FileUtils.readLines(todoFile));
-        } catch (IOException e) {
-            items = new ArrayList<String>();
-        }
-    }
-
-    // Writes items to a txt file locally
-    private void writeItems() {
-        File filesDir = getFilesDir();
-        File todoFile = new File(filesDir, "todo.txt");
-        try {
-            FileUtils.writeLines(todoFile, items);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
 
 
