@@ -27,7 +27,7 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     public void onBindViewHolder(TaskViewHolder holder, int position) {
         Task task = mTasks.get(position);
         holder.taskText.setText(task.getDescription());
-        holder.taskDue.setText("Due: " + task.getDueDate());
+        holder.taskDue.setText("Due: " + task.getRealtiveDueDate() + "\nPriority: " + task.getPriorityText());
         holder.itemView.setTag(task);
         holder.itemView.setOnLongClickListener(longClickListener);
     }
@@ -49,7 +49,6 @@ public class TasksAdapter extends RecyclerView.Adapter<TasksAdapter.TaskViewHold
     class TaskViewHolder extends RecyclerView.ViewHolder {
         private TextView taskText;
         private TextView taskDue;
-
 
         private TaskViewHolder(View itemView) {
             super(itemView);

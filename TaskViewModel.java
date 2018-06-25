@@ -46,6 +46,11 @@ public class TaskViewModel extends AndroidViewModel {
             mAsyncTaskDao.insert(params[0]);
             return null;
         }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+        }
     }
 
     private static class deleteAsyncTask extends AsyncTask<Task, Void, Void> {

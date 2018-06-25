@@ -13,15 +13,12 @@ import java.util.List;
 
 @Dao
 public interface TaskDao {
-    @Query("SELECT * FROM task")
+    @Query("SELECT * FROM task ORDER BY priority ASC")
     LiveData<List<Task>> getAllTasks();
 
-    @Query("select * from task where id = :id")
-    Task getItembyId(Long id);
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public Long insert(Task task);
+    Long insert(Task task);
 
     @Delete
-    public void delete(Task task);
+    void delete(Task task);
 }
